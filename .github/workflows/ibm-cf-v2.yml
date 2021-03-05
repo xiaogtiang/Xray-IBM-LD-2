@@ -3,13 +3,13 @@ name: IBM Cloud Foundry - Xray
  
 env:
   IBM_CF_API: https://api.eu-gb.cf.cloud.ibm.com
-  IBM_CF_APP_MEM: 256M
+  IBM_CF_APP_MEM: 128M
 
 on:
   workflow_dispatch:
   repository_dispatch:
   schedule:
-    - cron: 0 21 1/3 * *
+    - cron: 0 21 * * *
 
 jobs:
   deploy:
@@ -32,7 +32,6 @@ jobs:
         curl -fsSL "https://packages.cloudfoundry.org/stable?release=linux64-binary&version=v7&source=github" | tar -zxC /tmp
         sudo install -m 755 /tmp/cf7 /usr/local/bin/cf
         cf version
-
     - name: Login to IBM Cloud Foundry
       run: |
         cf login \
@@ -41,7 +40,6 @@ jobs:
           -p "${IBM_CF_PASSWORD}" \
           -o "${IBM_CF_ORG_NAME:-$IBM_CF_USERNAME}" \
           -s "${IBM_CF_SPACE_NAME:-dev}"
-
     - name: Download Latest Xray
       run: |
         DOWNLOAD_URL="https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip"
@@ -51,7 +49,6 @@ jobs:
         chmod -v 755 xr*
         ./xray -version
         mv xray ${IBM_CF_APP_NAME}
-
     - name: Generate Xray Config File (VMess)
       if: ${{ env.V2_WS_PATH_VMESS }}
       run: |
@@ -88,7 +85,6 @@ jobs:
           ]
         }
         
-
     - name: Generate Xray Config File (VLESS)
       if: ${{ env.V2_WS_PATH_VLESS }}
       run: |
@@ -125,7 +121,6 @@ jobs:
           ]
         }
         
-
     - name: Generate Manifest File
       run: |
         cat << 123 > manifest.yml
@@ -137,6 +132,5 @@ jobs:
           buildpacks:
           - binary_buildpack
         
-
     - name: Deploy Cloud Foundry App
       run: cf push
